@@ -4,7 +4,7 @@
 
 #include <cstddef>
 #include <utility>
-#include <type_traits>
+//#include <type_traits>
 #include <cassert>
 
 //#define EITHER_VARIADIC
@@ -30,9 +30,14 @@ struct bind_either< Left, either< Left, Right > >
     typedef either< Left, Right > type;
 };
 
-struct left_args {} left_init;
-struct right_args {} right_init;
+struct left_args {};
+struct right_args {};
 
+//namespace 
+//{
+//left_args left_init;
+//right_args right_init;
+//}
 namespace detail
 {
 template < size_t Left, size_t Right >
@@ -307,37 +312,31 @@ public:
 #else
     either( left_args ): Base()
     {
-        ::new( _left() ) Left();
-        _flags = _left_flag;
+        construct_left();
     }
     either( right_args ): Base()
     {
-        ::new( _right() ) Right();
-        _flags = _right_flag;
+        construct_right();
     }
     template < class Arg >
     either( left_args, Arg &&arg ): Base()
     {
-        ::new( _left() ) Left( std::forward<Arg>(arg) );
-        _flags = _left_flag;
+        construct_left( std::forward<Arg>( arg ) );
     }
     template < class Arg >
     either( right_args, Arg &&arg ): Base()
     {
-        ::new( _right() ) Right( std::forward<Arg>(arg) );
-        _flags = _right_flag;
+        construct_right( std::forward<Arg>( arg ) );
     }
     template < class Arg1, class Arg2 >
     either( left_args, Arg1 &&arg1, Arg2 &&arg2 ): Base()
     {
-        ::new( _left() ) Left( std::forward<Arg1>(arg1), std::forward<Arg2>(arg2) );
-        _flags = _left_flag;
+        construct_left( std::forward<Arg1>( arg1 ), std::forward<Arg2>( arg2 ) );
     }
     template < class Arg1, class Arg2 >
     either( right_args, Arg1 &&arg1, Arg2 &&arg2 ): Base()
     {
-        ::new( _right() ) Right( std::forward<Arg1>(arg1), std::forward<Arg2>(arg2) );
-        _flags = _right_flag;
+        construct_left( std::forward<Arg1>( arg1 ), std::forward<Arg2>( arg2 ) );
     }
 
     static either< Left, Right > mkleft() 
@@ -481,7 +480,8 @@ bool operator<( either< Left, Right > const &lhs, either< Left, Right > const &r
 
 // because of associativity, `bind` operator is defined as operator >>, not as operator >>=.
 template < class Left, class Right, class Fn >
-auto operator>>( either< Left, Right > &e, Fn f ) -> typename bind_either< Left, decltype(f(e.right())) >::type
+auto operator>>( either< Left, Right > &e, Fn f ) 
+-> typename bind_either< Left, decltype(f(e.right())) >::type
 {
     typedef typename bind_either< Left, decltype(f(e.right())) >::type result_type;
     if ( e.is_right() )
@@ -489,7 +489,8 @@ auto operator>>( either< Left, Right > &e, Fn f ) -> typename bind_either< Left,
     return result_type( left_args(), e.left() );
 }
 template < class Left, class Right, class Fn >
-auto operator>>( either< Left, Right > &&e, Fn f ) -> typename bind_either< Left, decltype(f(std::move(e.right()))) >::type
+auto operator>>( either< Left, Right > &&e, Fn f ) 
+-> typename bind_either< Left, decltype(f(std::move(e.right()))) >::type
 {
     typedef typename bind_either< Left, decltype(f(std::move(e.right()))) >::type result_type;
     if ( e.is_right() )
@@ -497,7 +498,8 @@ auto operator>>( either< Left, Right > &&e, Fn f ) -> typename bind_either< Left
     return result_type( left_args(), std::move(e.left()) );
 }
 template < class Left, class Right, class Fn >
-auto operator>>( either< Left, Right > const &e, Fn f ) -> typename bind_either< Left, decltype(f(e.right())) >::type
+auto operator>>( either< Left, Right > const &e, Fn f ) 
+-> typename bind_either< Left, decltype(f(e.right())) >::type
 {
     typedef typename bind_either< Left, decltype(f(e.right())) >::type result_type;
     if ( e.is_right() )
@@ -505,7 +507,8 @@ auto operator>>( either< Left, Right > const &e, Fn f ) -> typename bind_either<
     return result_type( left_args(), e.left() );
 }
 template < class Right, class Fn >
-auto operator>>( either< void, Right > &e, Fn f ) -> typename bind_either< void, decltype(f(e.right())) >::type
+auto operator>>( either< void, Right > &e, Fn f ) 
+-> typename bind_either< void, decltype(f(e.right())) >::type
 {
     typedef typename bind_either< void, decltype(f(e.right())) >::type result_type;
     if( e.is_right() )
@@ -513,7 +516,8 @@ auto operator>>( either< void, Right > &e, Fn f ) -> typename bind_either< void,
     return result_type( left_args() );
 }
 template < class Right, class Fn >
-auto operator>>( either< void, Right > &&e, Fn f ) -> typename bind_either< void, decltype(f(std::move(e.right()))) >::type
+auto operator>>( either< void, Right > &&e, Fn f ) 
+-> typename bind_either< void, decltype(f(std::move(e.right()))) >::type
 {
     typedef typename bind_either< void, decltype(f(std::move(e.right()))) >::type result_type;
     if( e.is_right() )
@@ -521,7 +525,8 @@ auto operator>>( either< void, Right > &&e, Fn f ) -> typename bind_either< void
     return result_type( left_args() );
 }
 template < class Right, class Fn >
-auto operator>>( either< void, Right > const &e, Fn f ) -> typename bind_either< void, decltype(f(e.right())) >::type
+auto operator>>( either< void, Right > const &e, Fn f ) 
+-> typename bind_either< void, decltype(f(e.right())) >::type
 {
     typedef typename bind_either< void, decltype(f(e.right())) >::type result_type;
     if( e.is_right() )
@@ -537,7 +542,8 @@ struct fmap_either
 };
 
 template < class Left, class Right, class Fn >
-auto fmap( either< Left, Right > &e, Fn f ) -> typename fmap_either< Left, decltype(f( e.right() )) >::type
+auto fmap( either< Left, Right > &e, Fn f ) 
+-> typename fmap_either< Left, decltype(f( e.right() )) >::type
 {
     typedef typename fmap_either< Left, decltype(f( e.right() )) >::type result_type;
     if( e.is_right() )
@@ -545,7 +551,8 @@ auto fmap( either< Left, Right > &e, Fn f ) -> typename fmap_either< Left, declt
     return result_type( left_args(), e.left() );
 }
 template < class Left, class Right, class Fn >
-auto fmap( either< Left, Right > &&e, Fn f ) -> typename fmap_either< Left, decltype(f( std::move(e.right()) )) >::type
+auto fmap( either< Left, Right > &&e, Fn f ) 
+-> typename fmap_either< Left, decltype(f( std::move(e.right()) )) >::type
 {
     typedef typename fmap_either< Left, decltype(f( std::move(e.right()) )) >::type result_type;
     if( e.is_right() )
@@ -553,7 +560,8 @@ auto fmap( either< Left, Right > &&e, Fn f ) -> typename fmap_either< Left, decl
     return result_type( left_args(), std::move(e.left()) );
 }
 template < class Left, class Right, class Fn >
-auto fmap( either< Left, Right > const &e, Fn f ) -> typename fmap_either< Left, decltype(f( e.right() )) >::type
+auto fmap( either< Left, Right > const &e, Fn f ) 
+-> typename fmap_either< Left, decltype(f( e.right() )) >::type
 {
     typedef typename fmap_either< Left, decltype(f( e.right() )) >::type result_type;
     if( e.is_right() )
@@ -561,7 +569,8 @@ auto fmap( either< Left, Right > const &e, Fn f ) -> typename fmap_either< Left,
     return result_type( left_args(), e.left() );
 }
 template < class Right, class Fn >
-auto fmap( either< void, Right > &e, Fn f ) -> typename fmap_either< void, decltype(f( e.right() )) >::type
+auto fmap( either< void, Right > &e, Fn f ) 
+-> typename fmap_either< void, decltype(f( e.right() )) >::type
 {
     typedef typename fmap_either< void, decltype(f( e.right() )) >::type result_type;
     if( e.is_right() )
@@ -569,7 +578,8 @@ auto fmap( either< void, Right > &e, Fn f ) -> typename fmap_either< void, declt
     return result_type( left_args() );
 }
 template < class Right, class Fn >
-auto fmap( either< void, Right > &&e, Fn f ) -> typename fmap_either< void, decltype(f( std::move( e.right() ) )) >::type
+auto fmap( either< void, Right > &&e, Fn f ) 
+-> typename fmap_either< void, decltype(f( std::move( e.right() ) )) >::type
 {
     typedef typename fmap_either< void, decltype(f( std::move( e.right() ) )) >::type result_type;
     if( e.is_right() )
@@ -577,7 +587,8 @@ auto fmap( either< void, Right > &&e, Fn f ) -> typename fmap_either< void, decl
     return result_type( left_args() );
 }
 template < class Right, class Fn >
-auto fmap( either< void, Right > const &e, Fn f ) -> typename fmap_either< void, decltype(f( e.right() )) >::type
+auto fmap( either< void, Right > const &e, Fn f ) 
+-> typename fmap_either< void, decltype(f( e.right() )) >::type
 {
     typedef typename fmap_either< void, decltype(f( e.right() )) >::type result_type;
     if( e.is_right() )
@@ -588,6 +599,16 @@ auto fmap( either< void, Right > const &e, Fn f ) -> typename fmap_either< void,
 
 //template < class Left, class Right, class Fn >
 //auto with( Fn f, either<Left, Right> ) {}
+
+
+//template < class Left, class Right, class Fn >
+//auto operator||( either< Left, Right > const &e, Fn fn )
+//{
+//    if( e.is_right() )
+//        return e;
+//
+//}
+
 
 
 #ifdef EITHER_NAMESPACE_END
