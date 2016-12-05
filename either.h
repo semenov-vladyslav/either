@@ -46,10 +46,10 @@ struct static_max : std::integral_constant< size_t, ((Left > Right) ? Left : Rig
 //{ return left > right ? left : right; }
 
 template < class T > struct size: 
-  std::conditional_t< std::is_empty<T>::value 
+  std::conditional< std::is_empty<T>::value 
     , std::integral_constant< size_t, 0 >
     , std::integral_constant< size_t, sizeof( T ) >
-  >
+  >::type
 {};
 template <> struct size<void> : std::integral_constant< size_t, 0 > {};
 
