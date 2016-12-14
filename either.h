@@ -10,6 +10,7 @@
 
 //#define EITHER_VARIADIC
 //#define EITHER_CONVERTIBLE
+//#define EITHER_EMPTY_ALLOWED
 
 #ifdef EITHER_NAMESPACE_BEGIN
 EITHER_NAMESPACE_BEGIN
@@ -126,6 +127,7 @@ protected:
   }
 
 public:
+  bool empty() const { return 0 == _flags; }
   bool is_left() const { return 0 != (_flags & _left_flag); }
   bool is_right() const { return 0 != (_flags & _right_flag); }
 
@@ -222,6 +224,7 @@ protected:
   }
 
 public:
+  bool empty() const { return 0 == _flags; }
   bool is_left() const { return 0 != (_flags & _left_flag); }
   bool is_right() const { return 0 != (_flags & _right_flag); }
 
@@ -284,12 +287,40 @@ struct is_init : std::integral_constant< bool, false
 template < class Left, class Right >
 class either: public detail::either_base< Left, Right >
 {
-  either &operator=( either< Left, Right > const &e );
-  either &operator=( either< Left, Right > &&e );
   typedef detail::either_base< Left, Right > Base;
 public:
   typedef Left left_type;
   typedef Right right_type;
+
+#ifdef EITHER_EMPTY_ALLOWED
+  either(): Base() {}
+  either &operator=( either< Left, Right > const &e )
+  {
+    if( !this->empty() )
+      throw std::logic_error( "non-empty either is assigned a value" );
+
+    if ( e.is_left() )
+      this->construct_copy_left( e._left() );
+    if ( e.is_right() )
+      this->construct_copy_right( e._right() );
+    return *this;
+  }
+  either &operator=( either< Left, Right > &&e )
+  {
+    if( !this->empty() )
+      throw std::logic_error( "non-empty either is assigned a value" );
+
+    if ( e.is_left() )
+      this->construct_move_left( e._left() );
+    if ( e.is_right() )
+      this->construct_move_right( e._right() );
+    return *this;
+  }
+#else
+  either() = delete;
+  either &operator=( either< Left, Right > const &e ) = delete;
+  either &operator=( either< Left, Right > &&e ) = delete;
+#endif
 
 #ifdef EITHER_VARIADIC
   template < class ...Args >
