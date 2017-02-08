@@ -12,8 +12,8 @@
 //#define EITHER_CONVERTIBLE
 //#define EITHER_EMPTY_ALLOWED
 
-#ifdef EITHER_NAMESPACE_BEGIN
-EITHER_NAMESPACE_BEGIN
+#ifdef EITHER_NAMESPACE // monad
+namespace EITHER_NAMESPACE {
 #endif
 
 
@@ -493,11 +493,6 @@ public:
   }
 };
 
-template < class R >
-either< void, R > nothing() { return either< void, R >::mkleft(); }
-
-struct unit {};
-
 template < class Left, class Right >
 bool operator==( either< Left, Right > const &lhs, either< Left, Right > const &rhs )
 {
@@ -570,6 +565,19 @@ auto operator>>( either< void, Right > const &e, Fn f )
     return f( e.right() );
   return result_type( left_args() );
 }
+
+
+template < class R >
+using maybe = either< void, R >;
+
+template < class R >
+maybe< R > just( R const &r ) { return maybe< R >::mkright( r ); }
+
+template < class R >
+maybe< R > nothing() { return maybe< R >::mkleft(); }
+
+
+struct unit {};
 
 
 template < class Left, class Result >
@@ -693,8 +701,8 @@ auto msum( It first, It last, Fn f )
 
 
 
-#ifdef EITHER_NAMESPACE_END
-EITHER_NAMESPACE_END
+#ifdef EITHER_NAMESPACE
+}
 #endif
 
 #endif
