@@ -16,6 +16,19 @@
 namespace EITHER_NAMESPACE {
 #endif
 
+#define mbind0(assign,expr) \
+  if( auto _m = expr ) \
+    assign _m.right(); \
+  else
+#define mbind_(var,expr,break) \
+  auto _m_##var = expr; \
+  if( _m_##var.is_left() ) \
+    break; \
+  else
+#define mbind(var,expr,break) \
+  mbind_(var,expr,break); \
+  auto &var = _m_##var.right()
+
 
 template < class Left, class Right >
 class either;
