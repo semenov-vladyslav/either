@@ -16,7 +16,7 @@
 namespace EITHER_NAMESPACE {
 #endif
 
-#define mbind0(assign,expr) \
+#define mbindif(assign,expr) \
   if( auto _m = expr ) \
     assign _m.right(); \
   else
@@ -28,6 +28,21 @@ namespace EITHER_NAMESPACE {
 #define mbind(var,expr,break) \
   mbind_(var,expr,break); \
   auto &var = _m_##var.right()
+
+#define ebind_(var, expr) \
+  auto __e##var = expr; \
+  if( __e##var.is_left() ) \
+  { \
+    ec = __e##var.left(); \
+    continue; \
+  } else
+#define ebind(var, expr) \
+  ebind_(var, (expr)); \
+  auto &var = __e##var.right()
+#define ebind2(var1, var2, expr) \
+  ebind_(var1##__##var2, expr); \
+  auto &var1 = __e##var1##__##var2.right().first; \
+  auto &var2 = __e##var1##__##var2.right().second
 
 
 template < class Left, class Right >
