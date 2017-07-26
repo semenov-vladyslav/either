@@ -43,6 +43,11 @@ namespace EITHER_NAMESPACE {
   ebind_(var1##__##var2, expr); \
   auto &var1 = __e##var1##__##var2.right().first; \
   auto &var2 = __e##var1##__##var2.right().second
+#define ebind3(var1, var2, var3, expr) \
+  ebind_(var1##__##var2##__##var3, expr); \
+  auto &var1 = std::get<0>(__e##var1##__##var2##__##var3.right()); \
+  auto &var2 = std::get<1>(__e##var1##__##var2##__##var3.right()); \
+  auto &var3 = std::get<2>(__e##var1##__##var2##__##var3.right())
 
 
 template < class Left, class Right >
