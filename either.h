@@ -49,6 +49,33 @@ namespace EITHER_NAMESPACE {
   auto &var2 = std::get<1>(__e##var1##__##var2##__##var3.right()); \
   auto &var3 = std::get<2>(__e##var1##__##var2##__##var3.right())
 
+#define embind_(var, expr) \
+  auto __em##var = expr; \
+  if( __em##var.is_left() ) \
+  { \
+    em = __em##var.left(); \
+    continue; \
+  } else
+#define embind(var, expr) \
+  embind_(var, (expr)); \
+  auto &var = __em##var.right()
+#define embind2(var1, var2, expr) \
+  embind_(var1##__##var2, expr); \
+  auto &var1 = __em##var1##__##var2.right().first; \
+  auto &var2 = __em##var1##__##var2.right().second
+#define embind3(var1, var2, var3, expr) \
+  embind_(var1##__##var2##__##var3, expr); \
+  auto &var1 = std::get<0>(__em##var1##__##var2##__##var3.right()); \
+  auto &var2 = std::get<1>(__em##var1##__##var2##__##var3.right()); \
+  auto &var3 = std::get<2>(__em##var1##__##var2##__##var3.right())
+
+#define _guard( expr, msg ) \
+  if( !(expr) ) \
+  { \
+    em = (msg); \
+    break; \
+  }
+
 
 template < class Left, class Right >
 class either;
